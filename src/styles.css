@@ -557,3 +557,27 @@ button.barlist-row { cursor: pointer; padding-right: 18px; }
 
 /* ---------- Backup ---------- */
 .btn.danger-fill { background: var(--expense); color: #fff; }
+
+/* ---------- App lock ---------- */
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  background: var(--bg);
+}
+.lock-inner { width: 100%; max-width: 360px; text-align: center; color: var(--text); }
+.lock-inner h1 { margin: 12px 0 24px; }
+.lock-inner .link-btn { margin: 8px auto; }
+.code-input { text-align: center; letter-spacing: 0.15em; font-size: 1.2rem; margin-bottom: 12px; }
+.recovery-code {
+  margin: 16px 0;
+  padding: 16px;
+  border: 2px dashed var(--accent);
+  border-radius: 12px;
+  text-align: center;
+  font: 700 1.6rem/1.2 ui-monospace, 'Roboto Mono', monospace;
+  letter-spacing: 0.08em;
+}

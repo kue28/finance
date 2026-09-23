@@ -30,6 +30,7 @@ const LoansList = lazy(() => import('./screens/loans/LoansList'));
 const LoanDetail = lazy(() => import('./screens/loans/LoanDetail'));
 const LoanEdit = lazy(() => import('./screens/loans/LoanEdit'));
 const BackupScreen = lazy(() => import('./screens/BackupScreen'));
+const SecurityScreen = lazy(() => import('./screens/SecurityScreen'));
 
 // Hash-based routing (#/budget) so a refresh on any screen works on static
 // hosts like GitHub Pages, which have no server-side route rewriting.
@@ -73,6 +74,7 @@ function Shell() {
               <Route path="/more/loans/:id/edit" component={LoanEdit} />
               <Route path="/more/loans/:id" component={LoanDetail} />
               <Route path="/more/backup" component={BackupScreen} />
+              <Route path="/more/security" component={SecurityScreen} />
               <Route path="/add" component={AddScreen} />
               <Route path="/tx/:id" component={EditTxScreen} />
               <Route>

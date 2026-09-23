@@ -3,6 +3,7 @@ import { Link } from 'wouter';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { getSetting } from '../db/db';
 import { getThemePref, setThemePref, type ThemePref } from '../lib/theme';
+import { getLock } from '../lib/lock';
 import { ChevronRightIcon } from '../components/icons';
 
 const themeOptions: { value: ThemePref; label: string }[] = [
@@ -27,6 +28,7 @@ export default function More() {
       to: '/more/backup', label: 'Backup & restore',
       hint: lastBackupAt ? `Last backup ${new Date(lastBackupAt).toLocaleDateString()} · CSV export` : 'No backup yet · CSV export',
     },
+    { to: '/more/security', label: 'Security', hint: getLock() ? 'Fingerprint lock is on' : 'Fingerprint lock is off' },
   ];
 
   return (

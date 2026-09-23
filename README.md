@@ -15,6 +15,7 @@ It works fully offline, keeps all data on the phone, and uses USD only.
 - **Money lent**: loans per person, partial repayments, overdue loans and write-offs (Other › Bad debts).
 - **Reports**: spending by category with subcategory drill-down, income vs expenses, budget vs actual, one category over time, and a monthly summary.
 - **Backup**: JSON export and restore, CSV export, and a reminder after 7 days without a backup.
+- **Fingerprint lock** (More → Security): asks for your fingerprint or phone PIN when the app opens. A recovery code gets you in if fingerprint unlock fails. The lock is per phone and isn't included in backups. It's a gate against someone opening the app, not encryption.
 
 ### What counts where
 
