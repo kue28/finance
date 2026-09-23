@@ -180,7 +180,109 @@ a { color: inherit; }
 }
 .banner span { flex: 1; }
 
-/* ---------- Money colours (used from Phase 2) ---------- */
+/* ---------- Headers ---------- */
+h2 { font-size: 1rem; margin: 24px 0 8px; color: var(--muted); font-weight: 600; }
+.page-header { display: flex; align-items: center; gap: 4px; margin-bottom: 16px; }
+.page-header h1 { margin: 0; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.page-header .icon-btn { margin-left: -10px; }
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.icon-btn:disabled { opacity: 0.25; cursor: default; }
+.icon-btn:not(:disabled):active { background: var(--surface-2); }
+
+/* ---------- Lists ---------- */
+.card.flush { padding: 0; overflow: hidden; }
+.list { list-style: none; margin: 0 0 16px; }
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 60px;
+  padding: 6px 8px 6px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.row:last-child { border-bottom: 0; }
+.row.column { flex-direction: column; align-items: stretch; padding: 12px 16px; gap: 8px; }
+.row-main {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 0;
+  text-decoration: none;
+  color: inherit;
+}
+.row-main.plain { border: 0; background: none; text-align: left; cursor: pointer; }
+.row-title { font-weight: 500; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.row-amount { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.row-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.reorder { display: flex; }
+.clamp { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* ---------- Forms ---------- */
+.form { display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > span { font-size: 0.875rem; color: var(--muted); }
+input[type='text'], input:not([type]), input[inputmode], select {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.check { display: flex; align-items: center; gap: 12px; min-height: 44px; }
+.check input { width: 22px; height: 22px; accent-color: var(--accent); }
+.segmented.wrap { flex-wrap: wrap; }
+.segmented.wrap .seg { flex: 1 1 40%; }
+.error { color: var(--expense); margin: 0; font-size: 0.9rem; }
+.notice { background: var(--surface-2); padding: 10px 14px; border-radius: 10px; }
+
+.add-inline { margin-bottom: 8px; }
+.add-inline-row { display: flex; gap: 8px; }
+.add-inline-row input { flex: 1; min-width: 0; }
+.add-inline .error { margin-top: 6px; }
+
+.btn.block { display: flex; width: 100%; margin-bottom: 12px; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.link-btn {
+  display: block;
+  margin: 12px 0;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- Money colours ---------- */
 .income { color: var(--income); }
 .expense { color: var(--expense); }
 .transfer { color: var(--transfer); }

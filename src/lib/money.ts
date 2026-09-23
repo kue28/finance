@@ -21,3 +21,19 @@ export function parseToCents(input: string): number | null {
   const [whole, frac = ''] = s.split('.');
   return Number(whole || '0') * 100 + Number(frac.padEnd(2, '0'));
 }
+
+/** Like parseToCents but allows a leading minus (e.g. an overdrawn opening balance). */
+export function parseSignedToCents(input: string): number | null {
+  const s = input.trim();
+  if (s.startsWith('-')) {
+    const v = parseToCents(s.slice(1));
+    return v === null ? null : -v;
+  }
+  return parseToCents(s);
+}
+
+/** Cents to a plain editable string: 1250 -> "12.50", 0 -> "". */
+export function centsToInput(cents: number): string {
+  if (cents === 0) return '';
+  return (cents / 100).toFixed(2);
+}

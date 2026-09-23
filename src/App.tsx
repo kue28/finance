@@ -9,6 +9,10 @@ import Budget from './screens/Budget';
 import Reports from './screens/Reports';
 import More from './screens/More';
 import Add from './screens/Add';
+import AccountsList from './screens/accounts/AccountsList';
+import AccountEdit from './screens/accounts/AccountEdit';
+import CategoriesList from './screens/categories/CategoriesList';
+import CategoryEdit from './screens/categories/CategoryEdit';
 
 // Hash-based routing (#/budget) so a refresh on any screen works on static
 // hosts like GitHub Pages, which have no server-side route rewriting.
@@ -34,6 +38,10 @@ function Shell() {
           <Route path="/budget" component={Budget} />
           <Route path="/reports" component={Reports} />
           <Route path="/more" component={More} />
+          <Route path="/more/accounts" component={AccountsList} />
+          <Route path="/more/accounts/:id" component={AccountEdit} />
+          <Route path="/more/categories" component={CategoriesList} />
+          <Route path="/more/categories/:id" component={CategoryEdit} />
           <Route path="/add" component={Add} />
           <Route>
             <p className="muted">Page not found.</p>
