@@ -62,6 +62,15 @@ export interface Transaction extends Timestamps {
   recurringId?: ID;
 }
 
+/** A monthly spending limit on one MAIN expense category. No rollovers:
+ *  each month is independent. Months without a row have no limit. */
+export interface Budget {
+  id: ID;
+  month: string; // 'YYYY-MM'
+  categoryId: ID; // main expense category
+  limit: Cents;
+}
+
 export interface Setting {
   key: string;
   value: unknown;

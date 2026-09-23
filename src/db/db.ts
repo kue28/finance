@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { Account, Category, Setting, Transaction } from './types';
+import type { Account, Budget, Category, Setting, Transaction } from './types';
 import { seed } from './seed';
 
 // IndexedDB database. Tables for budgets, recurring items, goals and loans are
@@ -10,6 +10,7 @@ export class FinanceDB extends Dexie {
   categories!: EntityTable<Category, 'id'>;
   transactions!: EntityTable<Transaction, 'id'>;
   settings!: EntityTable<Setting, 'key'>;
+  budgets!: EntityTable<Budget, 'id'>;
 
   constructor() {
     super('finance');
@@ -19,6 +20,10 @@ export class FinanceDB extends Dexie {
       categories: 'id, kind, parentId, sortOrder',
       transactions: 'id, date, accountId, toAccountId, categoryId, kind, feeForTransferId, goalId, loanId',
       settings: 'key',
+    });
+    // v2 (Phase 3): monthly budgets. Existing data is untouched.
+    this.version(2).stores({
+      budgets: 'id, month, [month+categoryId]',
     });
     // Runs once, only when the database is first created on this device.
     this.on('populate', (tx) => seed(tx));

@@ -26,6 +26,11 @@ const emptyFilters: Filters = {
 // Kept outside the component so filters survive opening a transaction and coming back.
 let savedFilters = emptyFilters;
 
+/** Pre-set the list's filters before navigating to it (e.g. from the Budget screen). */
+export function presetTransactionFilters(patch: Partial<Filters>) {
+  savedFilters = { ...emptyFilters, ...patch };
+}
+
 const PAGE = 150;
 
 function periodRange(f: Filters): [string, string] | null {

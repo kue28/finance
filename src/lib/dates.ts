@@ -34,7 +34,33 @@ export function monthRange(s: DateStr, offset = 0): [DateStr, DateStr] {
   return [toDateStr(first), toDateStr(last)];
 }
 
-const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+/** 'YYYY-MM' for a date (defaults to today). */
+export function monthKey(s: DateStr = today()): string {
+  return s.slice(0, 7);
+}
+
+/** Shift a 'YYYY-MM' month by n months. */
+export function shiftMonth(month: string, n: number): string {
+  const [y, m] = month.split('-').map(Number);
+  const d = new Date(y, m - 1 + n, 1, 12);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+}
+
+/** First and last day of a 'YYYY-MM' month. */
+export function monthBounds(month: string): [DateStr, DateStr] {
+  return monthRange(`${month}-01`);
+}
+
+/** "September 2026" */
+export function monthLabel(month: string): string {
+  const [y, m] = month.split('-').map(Number);
+  return `${monthNames[m - 1]} ${y}`;
+}
+
+const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+  'August', 'September', 'October', 'November', 'December'];
+
+const weekday =['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /** "Today", "Yesterday", "Mon 21 Sep", or "Mon 21 Sep 2025" for other years. */

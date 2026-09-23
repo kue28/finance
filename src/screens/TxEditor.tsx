@@ -79,10 +79,20 @@ function Editor({ existing, existingFee, accounts, defaultId, categories, freque
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
+  // When editing, the saved amount starts "selected": the first digit or dot
+  // replaces it (tap 4 on $3.50 → $4), while ⌫ first edits it in place.
+  const [freshAmount, setFreshAmount] = useState(!!existing);
+  const [freshFee, setFreshFee] = useState(!!existingFee);
+
   const onKey = useCallback((k: Key) => {
-    if (target === 'amount') setAmount((v) => applyKey(v, k));
-    else setFee((v) => applyKey(v, k));
-  }, [target]);
+    const fresh = target === 'amount' ? freshAmount : freshFee;
+    const set = target === 'amount' ? setAmount : setFee;
+    if (fresh) {
+      (target === 'amount' ? setFreshAmount : setFreshFee)(false);
+      if (k !== 'back') return set(applyKey('', k));
+    }
+    set((v) => applyKey(v, k));
+  }, [target, freshAmount, freshFee]);
 
   function switchKind(k: Kind) {
     setKind(k);
@@ -169,14 +179,14 @@ function Editor({ existing, existingFee, accounts, defaultId, categories, freque
       <button type="button" className={`amount-display ${kind} ${target === 'amount' ? 'targeted' : ''}`}
         onClick={() => setTarget('amount')} aria-label="Amount">
         <span className="currency">$</span>
-        <span className={amount === '' ? 'placeholder' : ''}>{displayAmount(amount)}</span>
+        <span className={amount === '' ? 'placeholder' : freshAmount ? 'selected' : ''}>{displayAmount(amount)}</span>
       </button>
 
       {kind === 'transfer' && (
         <div className="fee-row">
           <button type="button" className={`fee-display ${target === 'fee' ? 'targeted' : ''}`}
             onClick={() => setTarget('fee')}>
-            Fee: ${displayAmount(fee)} {target !== 'fee' && <span className="muted small">(tap to enter)</span>}
+            Fee: $<span className={freshFee && fee !== '' ? 'selected' : ''}>{displayAmount(fee)}</span> {target !== 'fee' && <span className="muted small">(tap to enter)</span>}
           </button>
           {fee !== '' && (
             <div className="segmented small-seg">

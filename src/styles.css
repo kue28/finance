@@ -423,3 +423,60 @@ input[type='date'], input[type='search'] {
   font-weight: 500;
   box-shadow: 0 6px 20px rgb(0 0 0 / 0.3);
 }
+
+/* ---------- Selected amount while editing (first tap replaces) ---------- */
+.selected { background: color-mix(in srgb, var(--accent) 25%, transparent); border-radius: 6px; padding: 0 4px; }
+
+/* ---------- Dashboard ---------- */
+.stat-row { display: flex; gap: 12px; }
+.stat-row .card { flex: 1; min-width: 0; }
+.stat { text-decoration: none; color: inherit; }
+.stat-value { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.link-card { display: block; text-decoration: none; color: inherit; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.notice-card { background: var(--surface-2); border-color: var(--accent); }
+
+/* ---------- Budgets ---------- */
+.month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.month-nav h1 { margin: 0; font-size: 1.3rem; text-align: center; }
+
+.budget-row {
+  display: block;
+  width: 100%;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.list li:last-child .budget-row { border-bottom: 0; }
+.budget-top, .budget-bottom { display: flex; justify-content: space-between; gap: 8px; }
+.budget-name { font-weight: 600; }
+.budget-nums { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.budget-bottom { margin-top: 4px; }
+.bar { height: 10px; margin-top: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.3s; }
+.budget-bar.warn .bar-fill { background: var(--warn); }
+.budget-bar.warn .budget-left { color: var(--warn); font-weight: 600; }
+.budget-bar.over .bar-fill { background: var(--expense); }
+.budget-bar.over .budget-left { color: var(--expense); font-weight: 700; }
+
+/* ---------- Bottom sheet ---------- */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgb(0 0 0 / 0.5);
+}
+.sheet {
+  width: 100%;
+  max-width: 640px;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+  border-radius: 20px 20px 0 0;
+  background: var(--bg);
+}
+.sheet-actions { margin-top: 16px; }

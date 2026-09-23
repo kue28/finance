@@ -1,8 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getSetting } from './db';
 import type { CategoryKind, ID } from './types';
-import { computeBalances } from '../lib/rules';
-import { addDays, today } from '../lib/dates';
+import { computeBalances, isIncome } from '../lib/rules';
+import { addDays, monthBounds, shiftMonth, today } from '../lib/dates';
+import { spentByMainCategory } from '../lib/budget';
 
 // Live queries: components using these re-render automatically whenever the
 // underlying data changes. They return undefined while the first load runs.
@@ -102,4 +103,47 @@ export function useFrequentSubcategories(limit = 8) {
     }
     return ranked.slice(0, limit).map((s) => s.id);
   }, []);
+}
+
+/**
+ * Everything the budget screen/dashboard needs for one 'YYYY-MM' month:
+ * limits per main category and spending per main category.
+ */
+export function useBudgetMonth(month: string) {
+  return useLiveQuery(async () => {
+    const [from, to] = monthBounds(month);
+    const [budgets, txs, cats] = await Promise.all([
+      db.budgets.where('month').equals(month).toArray(),
+      db.transactions.where('date').between(from, to, true, true).toArray(),
+      db.categories.where('kind').equals('expense').toArray(),
+    ]);
+    const categories = new Map(cats.map((c) => [c.id, c]));
+    const spent = spentByMainCategory(txs, categories, month);
+    const limits = new Map(budgets.map((b) => [b.categoryId, b.limit]));
+    // Active main categories, plus archived ones that still have a limit or spending this month.
+    const mains = cats
+      .filter((c) => c.parentId === null && (!c.archived || limits.has(c.id) || spent.has(c.id)))
+      .sort(bySort);
+    let income = 0;
+    for (const t of txs) if (isIncome(t)) income += t.amount;
+    let totalSpent = 0;
+    for (const v of spent.values()) totalSpent += v;
+    return { mains, limits, spent, totalSpent, income };
+  }, [month]);
+}
+
+/**
+ * Offer to copy last month's limits when this month has none yet, last month
+ * had some, and the user hasn't said "Not now" for this month.
+ */
+export function useBudgetCopyOffer(month: string) {
+  return useLiveQuery(async () => {
+    const prev = shiftMonth(month, -1);
+    const [thisCount, prevCount, dismissed] = await Promise.all([
+      db.budgets.where('month').equals(month).count(),
+      db.budgets.where('month').equals(prev).count(),
+      getSetting<string | null>('budgetCopyDismissed', null),
+    ]);
+    return thisCount === 0 && prevCount > 0 && dismissed !== month ? prev : null;
+  }, [month]);
 }
