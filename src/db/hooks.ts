@@ -7,6 +7,7 @@ import { spentByMainCategory } from '../lib/budget';
 import { dueOccurrences } from '../lib/recurring';
 import { goalSaved } from '../lib/goals';
 import { summarizeLoan, type LoanSummary } from '../lib/loans';
+import { backupReminderDays, loadReminderInputs } from '../lib/backup';
 
 // Live queries: components using these re-render automatically whenever the
 // underlying data changes. They return undefined while the first load runs.
@@ -230,4 +231,12 @@ export function useLoan(id: ID | undefined) {
       .sort((a, b) => (a.date === b.date ? b.createdAt - a.createdAt : a.date < b.date ? 1 : -1));
     return { loan, txs, ...summarizeLoan(loan, txs, today()) };
   }, [id]);
+}
+
+/** Days since the last backup when the 7-day reminder is due, otherwise null. */
+export function useBackupReminder() {
+  return useLiveQuery(async () => {
+    const { last, snoozed, first } = await loadReminderInputs();
+    return { days: backupReminderDays(last, first, snoozed, Date.now()), neverBackedUp: last === null };
+  }, []);
 }

@@ -1,8 +1,11 @@
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import {
-  useAccounts, useAllTransactions, useBalances, useBudgetCopyOffer, useBudgetMonth, useDueRecurring, useGoals, useLoans,
-  useLookups,
+  useAccounts, useAllTransactions, useBackupReminder, useBalances, useBudgetCopyOffer, useBudgetMonth, useDueRecurring,
+  useGoals, useLoans, useLookups,
 } from '../db/hooks';
+import { exportBackup, snoozeBackupReminder } from '../lib/backup';
+import { presetTransactionFilters } from './Transactions';
+import { showToast } from '../components/Toast';
 import DueList from '../components/DueList';
 import GoalProgress from '../components/GoalProgress';
 import { formatCents } from '../lib/money';
@@ -24,13 +27,15 @@ export default function Home() {
   const due = useDueRecurring();
   const goals = useGoals();
   const loans = useLoans();
+  const reminder = useBackupReminder();
+  const [, navigate] = useLocation();
 
-  if (!accounts || !balances || !txs || !lookups || !budget || copyOffer === undefined || !due || !goals || !loans) {
+  if (!accounts || !balances || !txs || !lookups || !budget || copyOffer === undefined || !due || !goals || !loans || !reminder) {
     return <><h1>Home</h1><Loading /></>;
   }
 
   // Net worth is the sum of ALL accounts, including archived ones, so money
-  // is never silently dropped. (Money lent out is shown separately, later.)
+  // is never silently dropped. Money lent out is shown separately below it.
   let netWorth = 0;
   for (const v of balances.values()) netWorth += v;
 
@@ -52,6 +57,20 @@ export default function Home() {
   return (
     <>
       <h1>Home</h1>
+
+      {reminder.days !== null && (
+        <section className="card notice-card">
+          <p style={{ marginTop: 0 }}>
+            {reminder.neverBackedUp
+              ? `You haven't backed up yet (${reminder.days} days of data). If this phone is lost, your data goes with it.`
+              : `It's been ${reminder.days} days since your last backup.`}
+          </p>
+          <div className="row-actions">
+            <button className="btn" onClick={async () => { if (await exportBackup()) showToast('Backup exported'); }}>Back up now</button>
+            <button className="btn ghost" onClick={() => snoozeBackupReminder()}>Later</button>
+          </div>
+        </section>
+      )}
 
       <section className="card">
         <div className="muted small">Net worth</div>
@@ -115,10 +134,10 @@ export default function Home() {
           const bal = balances.get(a.id) ?? 0;
           return (
             <li key={a.id} className="row">
-              <Link href={`/more/accounts/${a.id}`} className="row-main">
+              <button className="row-main plain" onClick={() => { presetTransactionFilters({ accountId: a.id }); navigate('/transactions'); }}>
                 <div className="row-title">{a.name}</div>
                 <div className="muted small">{accountTypeLabels[a.type]}</div>
-              </Link>
+              </button>
               <div className={bal < 0 ? 'row-amount expense' : 'row-amount'}>{formatCents(bal)}</div>
             </li>
           );

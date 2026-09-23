@@ -554,3 +554,6 @@ button.barlist-row { cursor: pointer; padding-right: 18px; }
 .chart-table td:last-child { text-align: right; }
 
 .summary-grid { display: grid; grid-template-columns: 1fr auto 1fr auto; gap: 2px 16px; font-variant-numeric: tabular-nums; }
+
+/* ---------- Backup ---------- */
+.btn.danger-fill { background: var(--expense); color: #fff; }

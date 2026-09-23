@@ -3,9 +3,7 @@ import { Link } from 'wouter';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { getSetting } from '../db/db';
 import { getThemePref, setThemePref, type ThemePref } from '../lib/theme';
-import { exportBackup } from '../lib/backup';
 import { ChevronRightIcon } from '../components/icons';
-import { showToast } from '../components/Toast';
 
 const themeOptions: { value: ThemePref; label: string }[] = [
   { value: 'system', label: 'System' },
@@ -13,29 +11,23 @@ const themeOptions: { value: ThemePref; label: string }[] = [
   { value: 'dark', label: 'Dark' },
 ];
 
-const links = [
-  { to: '/more/goals', label: 'Savings goals', hint: 'Targets, deadlines, contributions' },
-  { to: '/more/loans', label: 'Money lent', hint: 'Who owes you, repayments, write-offs' },
-  { to: '/more/accounts', label: 'Accounts', hint: 'Add, rename, archive, reorder, default account' },
-  { to: '/more/categories', label: 'Categories', hint: 'Expense and income categories' },
-  { to: '/more/recurring', label: 'Recurring', hint: 'Rent, salary, subscriptions and other repeats' },
-];
-
 export default function More() {
   const [theme, setTheme] = useState<ThemePref>(getThemePref);
   const lastBackupAt = useLiveQuery(() => getSetting<number | null>('lastBackupAt', null), []);
-  const [exporting, setExporting] = useState(false);
+  // Whether Android has promised not to clear our data when storage runs low.
+  const persisted = useLiveQuery(async () => (await navigator.storage?.persisted?.()) ?? null, []);
 
-  async function backup() {
-    setExporting(true);
-    try {
-      if (await exportBackup()) showToast('Backup exported');
-    } catch {
-      showToast('Export failed');
-    } finally {
-      setExporting(false);
-    }
-  }
+  const links = [
+    { to: '/more/goals', label: 'Savings goals', hint: 'Targets, deadlines, contributions' },
+    { to: '/more/loans', label: 'Money lent', hint: 'Who owes you, repayments, write-offs' },
+    { to: '/more/recurring', label: 'Recurring', hint: 'Rent, salary, subscriptions and other repeats' },
+    { to: '/more/accounts', label: 'Accounts', hint: 'Add, rename, archive, reorder, default account' },
+    { to: '/more/categories', label: 'Categories', hint: 'Expense and income categories' },
+    {
+      to: '/more/backup', label: 'Backup & restore',
+      hint: lastBackupAt ? `Last backup ${new Date(lastBackupAt).toLocaleDateString()} · CSV export` : 'No backup yet · CSV export',
+    },
+  ];
 
   return (
     <>
@@ -54,17 +46,6 @@ export default function More() {
       </ul>
 
       <section className="card">
-        <div className="label">Backup</div>
-        <p className="small" style={{ marginTop: 0 }}>
-          Your data lives only on this phone. Export a backup and save it to Google Drive, WhatsApp or email.
-        </p>
-        <button className="btn block" onClick={backup} disabled={exporting}>Export backup (JSON)</button>
-        <div className="muted small">
-          {lastBackupAt ? `Last backup: ${new Date(lastBackupAt).toLocaleString()}` : 'No backup yet.'}
-        </div>
-      </section>
-
-      <section className="card">
         <div className="label">Theme</div>
         <div className="segmented" role="radiogroup" aria-label="Theme">
           {themeOptions.map((o) => (
@@ -76,8 +57,12 @@ export default function More() {
           ))}
         </div>
       </section>
-      <p className="muted small">Restore from backup arrives in a later phase.</p>
-      <p className="muted small">Version {__APP_VERSION__}</p>
+
+      <p className="muted small">
+        {persisted === true && 'Storage: protected. Android won\'t clear your data to free space. '}
+        {persisted === false && 'Storage: not yet protected. Install the app to your home screen, and keep regular backups. '}
+        Version {__APP_VERSION__}
+      </p>
     </>
   );
 }

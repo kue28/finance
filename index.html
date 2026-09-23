@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0f1115" />
+    <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)" />
     <meta name="description" content="Personal budget and money tracker" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
@@ -12,7 +13,13 @@
       // Apply the saved theme before first paint to avoid a light/dark flash.
       try {
         var t = localStorage.getItem('theme');
-        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+        if (t === 'light' || t === 'dark') {
+          document.documentElement.dataset.theme = t;
+          // Status bar colour follows a forced theme too.
+          document.querySelectorAll('meta[name=theme-color]').forEach(function (m) {
+            m.setAttribute('content', t === 'dark' ? '#0f1115' : '#f5f6f8');
+          });
+        }
       } catch (e) {}
     </script>
   </head>

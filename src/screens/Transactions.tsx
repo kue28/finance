@@ -6,6 +6,8 @@ import { formatDay, monthRange, today } from '../lib/dates';
 import { isIncome, isSpending } from '../lib/rules';
 import TxRow, { describeTx, type Lookups } from '../components/TxRow';
 import { Loading } from '../components/ui';
+import { transactionsToCsv } from '../lib/csv';
+import { shareOrDownload } from '../lib/backup';
 
 type Period = 'all' | 'this_month' | 'last_month' | 'last_3' | 'custom';
 
@@ -172,9 +174,18 @@ export default function Transactions() {
               ))}
             </select>
           </label>
-          <button className="btn small ghost" onClick={() => set({ ...emptyFilters, search: f.search })}>
-            Clear filters
-          </button>
+          <div className="row-actions">
+            <button className="btn small ghost" onClick={() => set({ ...emptyFilters, search: f.search })}>
+              Clear filters
+            </button>
+            <button className="btn small ghost" disabled={filtered.length === 0} onClick={async () => {
+              // Oldest first reads more naturally in a spreadsheet.
+              const csv = transactionsToCsv([...filtered].reverse(), lookups);
+              await shareOrDownload(new File([csv], `finance-transactions-${today()}.csv`, { type: 'text/csv' }));
+            }}>
+              Export these as CSV
+            </button>
+          </div>
         </section>
       )}
 
