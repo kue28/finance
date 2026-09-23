@@ -34,6 +34,11 @@ export function monthRange(s: DateStr, offset = 0): [DateStr, DateStr] {
   return [toDateStr(first), toDateStr(last)];
 }
 
+/** Whole days from a to b (positive if b is later). */
+export function daysBetween(a: DateStr, b: DateStr): number {
+  return Math.round((fromDateStr(b).getTime() - fromDateStr(a).getTime()) / 86400000);
+}
+
 /** 'YYYY-MM' for a date (defaults to today). */
 export function monthKey(s: DateStr = today()): string {
   return s.slice(0, 7);

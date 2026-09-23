@@ -23,6 +23,7 @@ interface Common {
 export interface SimpleInput extends Common {
   kind: 'expense' | 'income';
   categoryId: ID;
+  recurringId?: ID;
 }
 
 export interface TransferInput extends Common {

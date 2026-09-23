@@ -480,3 +480,17 @@ input[type='date'], input[type='search'] {
   background: var(--bg);
 }
 .sheet-actions { margin-top: 16px; }
+
+/* ---------- Recurring ---------- */
+.due-top { display: flex; align-items: flex-start; gap: 8px; }
+.due-top .row-main { padding: 0; }
+.warn-text { color: var(--warn); font-weight: 600; }
+.picker-btn {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+}

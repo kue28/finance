@@ -4,6 +4,7 @@ import type { CategoryKind, ID } from './types';
 import { computeBalances, isIncome } from '../lib/rules';
 import { addDays, monthBounds, shiftMonth, today } from '../lib/dates';
 import { spentByMainCategory } from '../lib/budget';
+import { dueOccurrences } from '../lib/recurring';
 
 // Live queries: components using these re-render automatically whenever the
 // underlying data changes. They return undefined while the first load runs.
@@ -146,4 +147,30 @@ export function useBudgetCopyOffer(month: string) {
     ]);
     return thisCount === 0 && prevCount > 0 && dismissed !== month ? prev : null;
   }, [month]);
+}
+
+/** All recurring items (active first, then by next due date). */
+export function useRecurringList() {
+  return useLiveQuery(async () => {
+    const all = await db.recurring.toArray();
+    return all.sort((a, b) => {
+      if (a.active !== b.active) return a.active ? -1 : 1;
+      return (a.nextDueDate ?? '9999') < (b.nextDueDate ?? '9999') ? -1 : 1;
+    });
+  }, []);
+}
+
+export function useRecurringItem(id: ID | undefined) {
+  return useLiveQuery(() => (id ? db.recurring.get(id) : undefined), [id]);
+}
+
+/** Every occurrence due today or earlier across all items, oldest first. */
+export function useDueRecurring() {
+  return useLiveQuery(async () => {
+    const t = today();
+    const items = await db.recurring.where('nextDueDate').belowOrEqual(t).toArray();
+    return items
+      .flatMap((rec) => dueOccurrences(rec, t).map((date) => ({ rec, date })))
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  }, []);
 }

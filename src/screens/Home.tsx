@@ -1,5 +1,8 @@
 import { Link } from 'wouter';
-import { useAccounts, useAllTransactions, useBalances, useBudgetCopyOffer, useBudgetMonth, useLookups } from '../db/hooks';
+import {
+  useAccounts, useAllTransactions, useBalances, useBudgetCopyOffer, useBudgetMonth, useDueRecurring, useLookups,
+} from '../db/hooks';
+import DueList from '../components/DueList';
 import { formatCents } from '../lib/money';
 import { monthKey, monthLabel } from '../lib/dates';
 import { accountTypeLabels } from '../lib/labels';
@@ -16,8 +19,9 @@ export default function Home() {
   const lookups = useLookups();
   const budget = useBudgetMonth(month);
   const copyOffer = useBudgetCopyOffer(month);
+  const due = useDueRecurring();
 
-  if (!accounts || !balances || !txs || !lookups || !budget || copyOffer === undefined) {
+  if (!accounts || !balances || !txs || !lookups || !budget || copyOffer === undefined || !due) {
     return <><h1>Home</h1><Loading /></>;
   }
 
@@ -55,6 +59,8 @@ export default function Home() {
           <div className="stat-value income">{formatCents(budget.income)}</div>
         </div>
       </div>
+
+      <DueList due={due} accounts={lookups.accounts} categories={lookups.categories} />
 
       {copyOffer && (
         <Link href="/budget" className="card notice-card link-card">

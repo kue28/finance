@@ -16,6 +16,7 @@ const themeOptions: { value: ThemePref; label: string }[] = [
 const links = [
   { to: '/more/accounts', label: 'Accounts', hint: 'Add, rename, archive, reorder, default account' },
   { to: '/more/categories', label: 'Categories', hint: 'Expense and income categories' },
+  { to: '/more/recurring', label: 'Recurring', hint: 'Rent, salary, subscriptions and other repeats' },
 ];
 
 export default function More() {

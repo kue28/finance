@@ -71,6 +71,34 @@ export interface Budget {
   limit: Cents;
 }
 
+export type RepeatUnit = 'day' | 'week' | 'month';
+
+/**
+ * A repeating income or expense (rent, salary, subscriptions…). Never recorded
+ * automatically: each occurrence shows as "due" until you confirm or skip it.
+ * Occurrence k falls on startDate + k × (every × unit).
+ */
+export interface Recurring extends Timestamps {
+  id: ID;
+  kind: 'income' | 'expense';
+  amount: Cents;
+  categoryId: ID;
+  accountId: ID;
+  /** Also used as the display name, e.g. "Rent" or "Netflix". */
+  note?: string;
+  every: number; // weekly = 1 week, monthly = 1 month, custom = anything
+  unit: RepeatUnit;
+  startDate: DateStr;
+  endDate?: DateStr;
+  /** Earliest occurrence not yet confirmed or skipped (null = schedule has ended). */
+  nextDueDate: DateStr | null;
+  /** Later occurrences already handled out of order (e.g. confirmed the 2nd missed one first). */
+  handledAhead: DateStr[];
+  /** Hidden from the due list until this date. */
+  snoozedUntil?: DateStr;
+  active: boolean;
+}
+
 export interface Setting {
   key: string;
   value: unknown;
