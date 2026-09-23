@@ -3,12 +3,13 @@ import { useHashLocation } from 'wouter/use-hash-location';
 import BottomNav from './components/BottomNav';
 import AddButton from './components/AddButton';
 import UpdateBanner from './components/UpdateBanner';
+import Toast from './components/Toast';
 import Home from './screens/Home';
 import Transactions from './screens/Transactions';
 import Budget from './screens/Budget';
 import Reports from './screens/Reports';
 import More from './screens/More';
-import Add from './screens/Add';
+import { AddScreen, EditTxScreen } from './screens/TxEditor';
 import AccountsList from './screens/accounts/AccountsList';
 import AccountEdit from './screens/accounts/AccountEdit';
 import CategoriesList from './screens/categories/CategoriesList';
@@ -26,12 +27,13 @@ export default function App() {
 
 function Shell() {
   const [location] = useLocation();
-  const onAdd = location.startsWith('/add');
+  // The add/edit screen uses the full height for the keypad, so no nav there.
+  const editing = location === '/add' || location.startsWith('/tx/');
 
   return (
     <div className="app">
       <UpdateBanner />
-      <main className="screen">
+      <main className={editing ? 'screen editing' : 'screen'}>
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/transactions" component={Transactions} />
@@ -42,14 +44,16 @@ function Shell() {
           <Route path="/more/accounts/:id" component={AccountEdit} />
           <Route path="/more/categories" component={CategoriesList} />
           <Route path="/more/categories/:id" component={CategoryEdit} />
-          <Route path="/add" component={Add} />
+          <Route path="/add" component={AddScreen} />
+          <Route path="/tx/:id" component={EditTxScreen} />
           <Route>
             <p className="muted">Page not found.</p>
           </Route>
         </Switch>
       </main>
-      {!onAdd && <AddButton />}
-      <BottomNav />
+      {!editing && <AddButton />}
+      {!editing && <BottomNav />}
+      <Toast />
     </div>
   );
 }

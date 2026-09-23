@@ -1,5 +1,6 @@
 import { Link } from 'wouter';
-import { useAccounts, useBalances } from '../db/hooks';
+import { useAccounts, useAllTransactions, useBalances, useLookups } from '../db/hooks';
+import TxRow from '../components/TxRow';
 import { formatCents } from '../lib/money';
 import { accountTypeLabels } from '../lib/labels';
 import { Loading } from '../components/ui';
@@ -7,8 +8,10 @@ import { Loading } from '../components/ui';
 export default function Home() {
   const accounts = useAccounts();
   const balances = useBalances();
+  const txs = useAllTransactions();
+  const lookups = useLookups();
 
-  if (!accounts || !balances) return <><h1>Home</h1><Loading /></>;
+  if (!accounts || !balances || !txs || !lookups) return <><h1>Home</h1><Loading /></>;
 
   // Net worth is the sum of ALL accounts, including archived ones, so money
   // is never silently dropped. (Money lent out is shown separately, later.)
@@ -40,7 +43,17 @@ export default function Home() {
           );
         })}
       </ul>
-      <p className="muted small">Budgets and recent transactions will appear here in later phases.</p>
+      <h2>Recent transactions</h2>
+      {txs.length === 0 ? (
+        <p className="muted">Nothing yet. Tap + to log your first spend.</p>
+      ) : (
+        <>
+          <ul className="list card flush">
+            {txs.slice(0, 5).map((t) => <TxRow key={t.id} tx={t} lookups={lookups} />)}
+          </ul>
+          <Link href="/transactions" className="link-btn">See all transactions</Link>
+        </>
+      )}
     </>
   );
 }
