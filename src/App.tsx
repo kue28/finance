@@ -19,6 +19,9 @@ import RecurringEdit from './screens/recurring/RecurringEdit';
 import GoalsList from './screens/goals/GoalsList';
 import GoalDetail from './screens/goals/GoalDetail';
 import GoalEdit from './screens/goals/GoalEdit';
+import LoansList from './screens/loans/LoansList';
+import LoanDetail from './screens/loans/LoanDetail';
+import LoanEdit from './screens/loans/LoanEdit';
 
 // Hash-based routing (#/budget) so a refresh on any screen works on static
 // hosts like GitHub Pages, which have no server-side route rewriting.
@@ -55,6 +58,10 @@ function Shell() {
           <Route path="/more/goals/new" component={GoalEdit} />
           <Route path="/more/goals/:id/edit" component={GoalEdit} />
           <Route path="/more/goals/:id" component={GoalDetail} />
+          <Route path="/more/loans" component={LoansList} />
+          <Route path="/more/loans/new" component={LoanEdit} />
+          <Route path="/more/loans/:id/edit" component={LoanEdit} />
+          <Route path="/more/loans/:id" component={LoanDetail} />
           <Route path="/add" component={AddScreen} />
           <Route path="/tx/:id" component={EditTxScreen} />
           <Route>

@@ -1,6 +1,7 @@
 import { Link } from 'wouter';
 import {
-  useAccounts, useAllTransactions, useBalances, useBudgetCopyOffer, useBudgetMonth, useDueRecurring, useGoals, useLookups,
+  useAccounts, useAllTransactions, useBalances, useBudgetCopyOffer, useBudgetMonth, useDueRecurring, useGoals, useLoans,
+  useLookups,
 } from '../db/hooks';
 import DueList from '../components/DueList';
 import GoalProgress from '../components/GoalProgress';
@@ -22,8 +23,9 @@ export default function Home() {
   const copyOffer = useBudgetCopyOffer(month);
   const due = useDueRecurring();
   const goals = useGoals();
+  const loans = useLoans();
 
-  if (!accounts || !balances || !txs || !lookups || !budget || copyOffer === undefined || !due || !goals) {
+  if (!accounts || !balances || !txs || !lookups || !budget || copyOffer === undefined || !due || !goals || !loans) {
     return <><h1>Home</h1><Loading /></>;
   }
 
@@ -42,6 +44,10 @@ export default function Home() {
     .sort((a, b) => b.spent / b.limit - a.spent / a.limit);
   const hasBudgets = budget.limits.size > 0;
   const activeGoals = goals.filter((g) => !g.completed);
+  // Money owed to you is shown separately and NOT added to net worth.
+  const openLoans = loans.filter((l) => l.status === 'open');
+  const owed = openLoans.reduce((s, l) => s + l.outstanding, 0);
+  const overdueLoans = openLoans.filter((l) => l.overdue).length;
 
   return (
     <>
@@ -50,6 +56,13 @@ export default function Home() {
       <section className="card">
         <div className="muted small">Net worth</div>
         <div className={netWorth < 0 ? 'big-amount expense' : 'big-amount'}>{formatCents(netWorth)}</div>
+        {owed > 0 && (
+          <Link href="/more/loans" className="owed-line small">
+            Owed to you: <b>{formatCents(owed)}</b>
+            {overdueLoans > 0 && <span className="warn-text"> · {overdueLoans} overdue</span>}
+            <span className="muted"> ›</span>
+          </Link>
+        )}
       </section>
 
       <div className="stat-row">

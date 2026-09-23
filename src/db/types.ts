@@ -115,6 +115,22 @@ export interface Goal extends Timestamps {
   sortOrder: number;
 }
 
+/**
+ * Money lent to someone. Creating a loan also records a 'lend' transaction
+ * (money leaves fromAccountId). Repayments are 'repayment' transactions and
+ * write-offs are 'writeoff' transactions, all tagged with loanId.
+ * Outstanding and status are always calculated, never stored (see lib/loans.ts).
+ */
+export interface Loan extends Timestamps {
+  id: ID;
+  person: string;
+  amount: Cents;
+  dateLent: DateStr;
+  fromAccountId: ID;
+  expectedRepayDate?: DateStr;
+  note?: string;
+}
+
 export interface Setting {
   key: string;
   value: unknown;

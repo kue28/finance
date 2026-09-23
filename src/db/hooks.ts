@@ -1,11 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getSetting } from './db';
-import type { CategoryKind, Goal, ID } from './types';
+import type { CategoryKind, Goal, ID, Loan } from './types';
 import { computeBalances, isIncome } from '../lib/rules';
 import { addDays, monthBounds, shiftMonth, today } from '../lib/dates';
 import { spentByMainCategory } from '../lib/budget';
 import { dueOccurrences } from '../lib/recurring';
 import { goalSaved } from '../lib/goals';
+import { summarizeLoan, type LoanSummary } from '../lib/loans';
 
 // Live queries: components using these re-render automatically whenever the
 // underlying data changes. They return undefined while the first load runs.
@@ -56,13 +57,14 @@ export function useSubcategories(parentId: ID | undefined) {
 /** Lookup maps for showing names of accounts and categories in lists. */
 export function useLookups() {
   return useLiveQuery(async () => {
-    const [accounts, categories, goals] = await Promise.all([
-      db.accounts.toArray(), db.categories.toArray(), db.goals.toArray(),
+    const [accounts, categories, goals, loans] = await Promise.all([
+      db.accounts.toArray(), db.categories.toArray(), db.goals.toArray(), db.loans.toArray(),
     ]);
     return {
       accounts: new Map(accounts.map((a) => [a.id, a])),
       categories: new Map(categories.map((c) => [c.id, c])),
       goals: new Map(goals.map((g) => [g.id, g])),
+      loans: new Map(loans.map((l) => [l.id, l])),
     };
   }, []);
 }
@@ -199,5 +201,33 @@ export function useGoal(id: ID | undefined) {
     const txs = (await db.transactions.where('goalId').equals(id).toArray())
       .sort((a, b) => (a.date === b.date ? b.createdAt - a.createdAt : a.date < b.date ? 1 : -1));
     return { goal, saved: goalSaved(goal, txs), txs };
+  }, [id]);
+}
+
+export interface LoanWithSummary extends Loan, LoanSummary {}
+
+/** All loans with repaid / written off / outstanding / overdue worked out. */
+export function useLoans() {
+  return useLiveQuery(async () => {
+    const [loans, txs] = await Promise.all([
+      db.loans.toArray(),
+      db.transactions.where('kind').anyOf('repayment', 'writeoff').toArray(),
+    ]);
+    const t = today();
+    return loans
+      .map((l): LoanWithSummary => ({ ...l, ...summarizeLoan(l, txs, t) }))
+      .sort((a, b) => (a.dateLent < b.dateLent ? 1 : a.dateLent > b.dateLent ? -1 : b.createdAt - a.createdAt));
+  }, []);
+}
+
+/** One loan with its summary and all its transactions (newest first). */
+export function useLoan(id: ID | undefined) {
+  return useLiveQuery(async () => {
+    if (!id) return undefined;
+    const loan = await db.loans.get(id);
+    if (!loan) return null;
+    const txs = (await db.transactions.where('loanId').equals(id).toArray())
+      .sort((a, b) => (a.date === b.date ? b.createdAt - a.createdAt : a.date < b.date ? 1 : -1));
+    return { loan, txs, ...summarizeLoan(loan, txs, today()) };
   }, [id]);
 }

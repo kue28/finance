@@ -146,6 +146,9 @@ export default function Transactions() {
               <option value="expense">Expenses</option>
               <option value="income">Income</option>
               <option value="transfer">Transfers</option>
+              <option value="lend">Money lent</option>
+              <option value="repayment">Loan repayments</option>
+              <option value="writeoff">Write-offs</option>
             </select>
           </label>
           <label className="field compact">

@@ -5,6 +5,7 @@ import {
   useAccounts, useCategories, useDefaultAccountId, useFrequentSubcategories, useLookups, useTransaction,
 } from '../db/hooks';
 import { deleteTransaction, getTransferFee, saveSimple, saveTransfer, type FeeKey } from '../db/txOps';
+import { createLoan } from '../db/loanOps';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { centsToInput, formatCents, parseToCents } from '../lib/money';
 import { today } from '../lib/dates';
@@ -14,7 +15,7 @@ import CategoryPicker from '../components/CategoryPicker';
 import { showToast } from '../components/Toast';
 import { Loading, PageHeader } from '../components/ui';
 
-type Kind = 'expense' | 'income' | 'transfer';
+type Kind = 'expense' | 'income' | 'transfer' | 'lend';
 
 const feeOptions: { key: FeeKey; label: string }[] = [
   { key: 'fee_mobile', label: 'Mobile money' },
@@ -34,6 +35,8 @@ export function EditTxScreen({ params }: { params: { id: string } }) {
   if (tx === undefined || fee === undefined) return <><PageHeader title="Edit" /><Loading /></>;
   // A transfer fee is edited through its transfer, so both stay in step.
   if (tx.feeForTransferId) return <Redirect to={`/tx/${tx.feeForTransferId}`} replace />;
+  // Lending, repayments and write-offs are managed on the loan's screen.
+  if (tx.loanId) return <Redirect to={`/more/loans/${tx.loanId}`} replace />;
   return <Loader existing={tx} existingFee={fee ?? undefined} />;
 }
 
@@ -48,13 +51,14 @@ function Loader({ existing, existingFee }: { existing?: Transaction; existingFee
   }
   return (
     <Editor existing={existing} existingFee={existingFee} accounts={accounts} defaultId={defaultId}
-      categories={lookups.categories} frequent={frequent} incomeCats={incomeCats} />
+      categories={lookups.categories} frequent={frequent} incomeCats={incomeCats}
+      people={[...new Set([...(lookups.loans?.values() ?? [])].map((l) => l.person))].sort()} />
   );
 }
 
-function Editor({ existing, existingFee, accounts, defaultId, categories, frequent, incomeCats }: {
+function Editor({ existing, existingFee, accounts, defaultId, categories, frequent, incomeCats, people }: {
   existing?: Transaction; existingFee?: Transaction; accounts: Account[]; defaultId: ID | null;
-  categories: Map<ID, Category>; frequent: ID[]; incomeCats: Category[];
+  categories: Map<ID, Category>; frequent: ID[]; incomeCats: Category[]; people: string[];
 }) {
   const [, navigate] = useLocation();
 
@@ -76,6 +80,9 @@ function Editor({ existing, existingFee, accounts, defaultId, categories, freque
   const [date, setDate] = useState(existing?.date ?? today());
   const [note, setNote] = useState(existing?.note ?? '');
   const [pickerOpen, setPickerOpen] = useState(false);
+  // Lend tab only
+  const [person, setPerson] = useState('');
+  const [repayBy, setRepayBy] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -122,7 +129,13 @@ function Editor({ existing, existingFee, accounts, defaultId, categories, freque
     if (!accountId) return setError('Choose an account.');
     setBusy(true);
     try {
-      if (kind === 'transfer') {
+      if (kind === 'lend') {
+        // Lending is not an expense: it creates a loan and moves money out of the account.
+        if (!person.trim()) return setError('Who did you lend to?');
+        await createLoan({ person, amount: cents, dateLent: date, fromAccountId: accountId,
+          expectedRepayDate: repayBy || undefined, note });
+        showToast(`Lent ${formatCents(cents)} to ${person.trim()}`);
+      } else if (kind === 'transfer') {
         const feeCents = fee === '' ? 0 : parseToCents(fee);
         if (feeCents === null) return setError('Fee must be an amount like 0.50.');
         if (!toAccountId || toAccountId === accountId) return setError('Choose two different accounts.');
@@ -168,7 +181,7 @@ function Editor({ existing, existingFee, accounts, defaultId, categories, freque
 
       {!existing && (
         <div className="segmented kind-tabs">
-          {(['expense', 'income', 'transfer'] as Kind[]).map((k) => (
+          {(['expense', 'income', 'transfer', 'lend'] as Kind[]).map((k) => (
             <button key={k} className={kind === k ? `seg active ${k}` : 'seg'} onClick={() => switchKind(k)}>
               {k[0].toUpperCase() + k.slice(1)}
             </button>
@@ -218,6 +231,18 @@ function Editor({ existing, existingFee, accounts, defaultId, categories, freque
             </button>
           ))}
         </div>
+      )}
+
+      {kind === 'lend' && (
+        <>
+          <input value={person} onChange={(e) => setPerson(e.target.value)} placeholder="Lent to (name)"
+            list="loan-people" autoComplete="off" maxLength={60} />
+          <datalist id="loan-people">{people.map((p) => <option key={p} value={p} />)}</datalist>
+          <label className="field compact">
+            <span>Expect it back by (optional)</span>
+            <input type="date" value={repayBy} onChange={(e) => setRepayBy(e.target.value)} />
+          </label>
+        </>
       )}
 
       <div className="tx-fields">

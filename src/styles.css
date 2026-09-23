@@ -498,3 +498,13 @@ input[type='date'], input[type='search'] {
 /* ---------- Goals ---------- */
 .budget-bar.goal .bar-fill { background: var(--income); }
 .budget-bar.goal.done .budget-bottom span:first-child { color: var(--income); font-weight: 600; }
+
+/* ---------- Loans ---------- */
+.kind-tabs .seg { font-size: 0.9rem; padding: 0 2px; }
+.save-btn.lend { background: var(--text); color: var(--bg); }
+.badge.overdue { color: var(--warn); }
+.person-head { display: flex; justify-content: space-between; color: var(--text); }
+.owed-line { display: block; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); text-decoration: none; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 12px 0 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
