@@ -68,6 +68,18 @@ const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'Jul
 const weekday =['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+/** "1 Sep – 30 Sep 2026" (year shown once when both dates share it). */
+export function formatRange(from: DateStr, to: DateStr): string {
+  const a = fromDateStr(from), b = fromDateStr(to);
+  const left = `${a.getDate()} ${month[a.getMonth()]}${a.getFullYear() !== b.getFullYear() ? ` ${a.getFullYear()}` : ''}`;
+  return `${left} – ${b.getDate()} ${month[b.getMonth()]} ${b.getFullYear()}`;
+}
+
+/** "Sep" for a 'YYYY-MM' month. */
+export function monthShort(m: string): string {
+  return month[Number(m.slice(5, 7)) - 1];
+}
+
 /** "Today", "Yesterday", "Mon 21 Sep", or "Mon 21 Sep 2025" for other years. */
 export function formatDay(s: DateStr): string {
   const t = today();
