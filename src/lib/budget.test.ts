@@ -80,7 +80,7 @@ describe('budget ops', () => {
 });
 
 describe('upgrading an existing phone database', () => {
-  it('keeps v1 data when the v2 budgets table is added', async () => {
+  it('keeps v1 data through every upgrade (budgets … loans, icons)', async () => {
     db.close();
     await Dexie.delete('finance');
     // Simulate the Phase 1/2 database already on the phone.
@@ -92,6 +92,10 @@ describe('upgrading an existing phone database', () => {
     });
     await old.table('accounts').add({ id: 'a1', name: 'EcoCash', type: 'mobile_wallet', openingBalance: 500, archived: false, sortOrder: 0 });
     await old.table('transactions').add({ id: 't1', kind: 'expense', date: '2026-09-01', amount: 100, accountId: 'a1' });
+    await old.table('categories').bulkAdd([
+      { id: 'c1', name: 'Groceries', kind: 'expense', parentId: 'c0', archived: false, sortOrder: 0 },
+      { id: 'c2', name: 'My own thing', kind: 'expense', parentId: 'c0', archived: false, sortOrder: 1 },
+    ]);
     old.close();
 
     const upgraded = new FinanceDB();
@@ -99,6 +103,9 @@ describe('upgrading an existing phone database', () => {
     expect(await upgraded.accounts.get('a1')).toMatchObject({ name: 'EcoCash', openingBalance: 500 });
     expect(await upgraded.transactions.count()).toBe(1);
     expect(await upgraded.budgets.count()).toBe(0);
+    // v6: known categories get their default icon; the user's own ones are left alone.
+    expect((await upgraded.categories.get('c1'))?.icon).toBe('shopping-cart');
+    expect((await upgraded.categories.get('c2'))?.icon).toBeUndefined();
     upgraded.close();
     await db.open();
   });

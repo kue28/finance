@@ -4,6 +4,9 @@ import { confirmOccurrence, skipOccurrence, snooze } from '../db/recurringOps';
 import { centsToInput, formatCents, parseToCents } from '../lib/money';
 import { daysBetween, formatDay, today } from '../lib/dates';
 import { showToast } from './Toast';
+import { haptic } from '../lib/haptics';
+import { categoryIcon } from '../lib/icons';
+import IconBadge from './IconBadge';
 
 interface Due { rec: Recurring; date: DateStr }
 
@@ -29,12 +32,13 @@ export default function DueList({ due, accounts, categories }: {
 
   async function confirm(d: Due) {
     await confirmOccurrence(d.rec.id, d.date);
+    haptic();
     showToast(`Recorded ${formatCents(d.rec.amount)} · ${recurringName(d.rec, categories)}`);
   }
 
   return (
     <>
-      <h2>Due ({due.length})</h2>
+      <div className="section-head"><h2>Due ({due.length})</h2></div>
       <ul className="list card flush">
         {due.map((d) => {
           const k = key(d);
@@ -42,6 +46,8 @@ export default function DueList({ due, accounts, categories }: {
           return (
             <li key={k} className="row column">
               <div className="due-top">
+                <IconBadge icon={categoryIcon(categories.get(d.rec.categoryId), categories)} size={36}
+                  tone={d.rec.kind === 'income' ? 'income' : 'neutral'} />
                 <div className="row-main">
                   <div className="row-title">{recurringName(d.rec, categories)}</div>
                   <div className={daysBetween(d.date, today()) > 0 ? 'small warn-text' : 'muted small'}>
@@ -101,6 +107,7 @@ function ConfirmSheet({ due, accounts, name, onClose }: {
     const cents = parseToCents(amount);
     if (!cents) return setError('Enter an amount.');
     await confirmOccurrence(rec.id, dueDate, { amount: cents, accountId, date, note });
+    haptic();
     showToast(`Recorded ${formatCents(cents)} · ${name}`);
     onClose();
   }

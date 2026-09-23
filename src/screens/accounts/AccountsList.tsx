@@ -6,6 +6,8 @@ import { formatCents } from '../../lib/money';
 import { accountTypeLabels } from '../../lib/labels';
 import { Loading, PageHeader, ReorderButtons } from '../../components/ui';
 import { StarIcon } from '../../components/icons';
+import IconBadge from '../../components/IconBadge';
+import { accountIcons } from '../../lib/icons';
 
 export default function AccountsList() {
   const accounts = useAccounts();
@@ -25,6 +27,7 @@ export default function AccountsList() {
       <ul className="list card flush">
         {active.map((a, i) => (
           <li key={a.id} className="row">
+            <IconBadge icon={accountIcons[a.type]} size={36} />
             <Link href={`/more/accounts/${a.id}`} className="row-main">
               <div className="row-title">
                 {a.name}

@@ -1,6 +1,9 @@
 import { Link } from 'wouter';
+import type { LucideIcon } from 'lucide-react';
 import type { Account, Category, Goal, ID, Loan, Transaction } from '../db/types';
 import { formatCents } from '../lib/money';
+import { categoryIcon, GoalIcon, LoanIcon, TransferIcon, WriteOffIcon } from '../lib/icons';
+import IconBadge, { type BadgeTone } from './IconBadge';
 
 export interface Lookups {
   accounts: Map<ID, Account>;
@@ -67,12 +70,25 @@ export function TxAmount({ tx }: { tx: Transaction }) {
   }
 }
 
+/** The icon and tint shown at the start of a transaction row. */
+export function txIcon(tx: Transaction, { categories }: Lookups): { icon: LucideIcon; tone: BadgeTone } {
+  switch (tx.kind) {
+    case 'transfer': return { icon: tx.goalId ? GoalIcon : TransferIcon, tone: 'neutral' };
+    case 'lend': case 'repayment': return { icon: LoanIcon, tone: 'neutral' };
+    case 'writeoff': return { icon: WriteOffIcon, tone: 'expense' };
+    case 'income': return { icon: categoryIcon(categories.get(tx.categoryId ?? ''), categories), tone: 'income' };
+    default: return { icon: categoryIcon(categories.get(tx.categoryId ?? ''), categories), tone: 'neutral' };
+  }
+}
+
 export default function TxRow({ tx, lookups }: { tx: Transaction; lookups: Lookups }) {
   const { title, subtitle } = describeTx(tx, lookups);
+  const { icon, tone } = txIcon(tx, lookups);
   // Loan entries are managed on their loan's screen.
   const href = tx.loanId ? `/more/loans/${tx.loanId}` : `/tx/${tx.id}`;
   return (
     <li className="row">
+      <IconBadge icon={icon} tone={tone} />
       <Link href={href} className="row-main">
         <div className="row-title">{title}</div>
         <div className="muted small clamp">{subtitle}</div>

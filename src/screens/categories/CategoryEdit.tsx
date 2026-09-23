@@ -1,11 +1,14 @@
 import { useState, type ReactNode } from 'react';
 import { useLocation } from 'wouter';
+import type { LucideIcon } from 'lucide-react';
 import type { Category } from '../../db/types';
 import { useCategories, useCategory, useSubcategories } from '../../db/hooks';
 import { addCategory, move, updateCategory } from '../../db/ops';
 import { nameTaken } from '../../lib/labels';
 import { Loading, PageHeader, ReorderButtons } from '../../components/ui';
 import AddInline from '../../components/AddInline';
+import IconPicker from '../../components/IconPicker';
+import { categoryIcon } from '../../lib/icons';
 
 // Why some things can't be archived:
 // - System subcategories (Mobile money fees, IMTT, Bank charges, Bad debts) are
@@ -30,6 +33,10 @@ function Editor({ cat, subs, siblings }: { cat: Category; subs: Category[]; sibl
   const [name, setName] = useState(cat.name);
   const [error, setError] = useState('');
   const [showArchived, setShowArchived] = useState(false);
+  // Which category's icon is being chosen (the main one or a subcategory).
+  const [picking, setPicking] = useState<Category | null>(null);
+  const byId = new Map([cat, ...subs].map((c) => [c.id, c]));
+  const MainIcon = categoryIcon(cat, byId);
 
   const activeSubs = subs.filter((s) => !s.archived);
   const archivedSubs = subs.filter((s) => s.archived);
@@ -57,8 +64,11 @@ function Editor({ cat, subs, siblings }: { cat: Category; subs: Category[]; sibl
 
       <div className="form">
         <label className="field">
-          <span>Name</span>
+          <span>Icon and name</span>
           <div className="add-inline-row">
+            <button type="button" className="icon-choose" onClick={() => setPicking(cat)} aria-label="Change icon">
+              <MainIcon size={22} strokeWidth={1.9} />
+            </button>
             <input value={name} onChange={(e) => setName(e.target.value)} />
             <button className="btn" onClick={rename} disabled={name.trim() === cat.name}>Rename</button>
           </div>
@@ -71,7 +81,7 @@ function Editor({ cat, subs, siblings }: { cat: Category; subs: Category[]; sibl
           <h2>Subcategories</h2>
           <ul className="list card flush">
             {activeSubs.map((s, i) => (
-              <SubRow key={s.id} sub={s} siblings={subs}
+              <SubRow key={s.id} sub={s} siblings={subs} icon={categoryIcon(s, byId)} onIcon={() => setPicking(s)}
                 canArchive={!s.systemKey && activeSubs.length > 1}
                 reorder={<ReorderButtons first={i === 0} last={i === activeSubs.length - 1}
                   onUp={() => move('categories', activeSubs, s.id, -1)}
@@ -111,13 +121,18 @@ function Editor({ cat, subs, siblings }: { cat: Category; subs: Category[]; sibl
       {!cat.archived && (
         <p className="muted small">Archiving hides it when adding transactions. Past transactions keep their category.</p>
       )}
+
+      {picking && (
+        <IconPicker value={picking.icon} allowInherit={picking.parentId !== null} onClose={() => setPicking(null)}
+          onPick={async (key) => { await updateCategory(picking.id, { icon: key }); setPicking(null); }} />
+      )}
     </>
   );
 }
 
 /** A subcategory row; tap the name to rename it in place. */
-function SubRow({ sub, siblings, canArchive, reorder }: {
-  sub: Category; siblings: Category[]; canArchive: boolean; reorder: ReactNode;
+function SubRow({ sub, siblings, canArchive, reorder, icon: Icon, onIcon }: {
+  sub: Category; siblings: Category[]; canArchive: boolean; reorder: ReactNode; icon: LucideIcon; onIcon: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(sub.name);
@@ -157,6 +172,9 @@ function SubRow({ sub, siblings, canArchive, reorder }: {
 
   return (
     <li className="row">
+      <button className="icon-choose small" onClick={onIcon} aria-label={`Change icon for ${sub.name}`}>
+        <Icon size={18} strokeWidth={1.9} />
+      </button>
       <button className="row-main plain" onClick={() => setEditing(true)}>
         <div className="row-title">{sub.name}</div>
         {sub.systemKey && <div className="muted small">Used automatically</div>}

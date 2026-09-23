@@ -2,7 +2,6 @@ import { lazy, Suspense } from 'react';
 import { Route, Router, Switch, useLocation } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
 import BottomNav from './components/BottomNav';
-import AddButton from './components/AddButton';
 import UpdateBanner from './components/UpdateBanner';
 import Toast from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -84,7 +83,6 @@ function Shell() {
           </Suspense>
         </ErrorBoundary>
       </main>
-      {!editing && <AddButton />}
       {!editing && <BottomNav />}
       <Toast />
     </div>

@@ -11,6 +11,9 @@ import { presetTransactionFilters } from './Transactions';
 import { ChevronLeftIcon, ChevronRightIcon } from '../components/icons';
 import { showToast } from '../components/Toast';
 import { Loading } from '../components/ui';
+import BudgetReportsSwitch from '../components/BudgetReportsSwitch';
+import IconBadge from '../components/IconBadge';
+import { categoryIcon } from '../lib/icons';
 
 // Remember the month being viewed while moving between tabs.
 let viewedMonth = monthKey();
@@ -23,7 +26,10 @@ export default function Budget() {
   const [editing, setEditing] = useState<Category | null>(null);
   const isCurrent = month === monthKey();
 
+  const noParents = new Map<string, Category>();
   const header = (
+    <>
+    <BudgetReportsSwitch current="budget" />
     <div className="month-nav">
       <button className="icon-btn" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Previous month">
         <ChevronLeftIcon />
@@ -33,6 +39,7 @@ export default function Budget() {
         <ChevronRightIcon />
       </button>
     </div>
+    </>
   );
 
   if (!data || copyFrom === undefined) return <>{header}<Loading /></>;
@@ -87,7 +94,7 @@ export default function Budget() {
           {budgeted.map((c) => (
             <li key={c.id}>
               <button className="budget-row" onClick={() => setEditing(c)}>
-                <BudgetBar name={c.name} spent={spent.get(c.id) ?? 0} limit={limits.get(c.id)!} />
+                <BudgetBar name={c.name} icon={categoryIcon(c, noParents)} spent={spent.get(c.id) ?? 0} limit={limits.get(c.id)!} />
               </button>
             </li>
           ))}
@@ -98,6 +105,7 @@ export default function Budget() {
       <ul className="list card flush">
         {unbudgeted.map((c) => (
           <li key={c.id} className="row">
+            <IconBadge icon={categoryIcon(c, noParents)} size={36} />
             <button className="row-main plain" onClick={() => setEditing(c)}>
               <div className="row-title">{c.name}</div>
               <div className="muted small">Tap to set a limit</div>

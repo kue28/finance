@@ -1,5 +1,6 @@
 import type { Transaction as DexieTx } from 'dexie';
 import type { Account, AccountType, Category, SystemKey } from './types';
+import { defaultIconFor } from '../lib/icons';
 
 // Default data written the first time the app opens on a device.
 
@@ -44,20 +45,22 @@ export async function seed(tx: DexieTx) {
   expenseCategories.forEach(([mainName, subs], i) => {
     const main: Category = {
       id: sid('cat'), name: mainName, kind: 'expense', parentId: null,
-      archived: false, sortOrder: i, ...stamp,
+      archived: false, sortOrder: i, icon: defaultIconFor(mainName, 'expense', true), ...stamp,
     };
     categories.push(main);
     subs.forEach((sub, j) => {
       const [name, systemKey] = typeof sub === 'string' ? [sub, undefined] : sub;
       categories.push({
         id: sid('cat'), name, kind: 'expense', parentId: main.id,
-        archived: false, sortOrder: j, ...(systemKey ? { systemKey } : {}), ...stamp,
+        archived: false, sortOrder: j, ...(systemKey ? { systemKey } : {}),
+        ...(defaultIconFor(name, 'expense', false) ? { icon: defaultIconFor(name, 'expense', false) } : {}), ...stamp,
       });
     });
   });
   incomeCategories.forEach((name, i) => {
     categories.push({
-      id: sid('cat'), name, kind: 'income', parentId: null, archived: false, sortOrder: i, ...stamp,
+      id: sid('cat'), name, kind: 'income', parentId: null, archived: false, sortOrder: i,
+      icon: defaultIconFor(name, 'income', true), ...stamp,
     });
   });
 

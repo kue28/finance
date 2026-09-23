@@ -1,24 +1,25 @@
 import { useMemo, useState } from 'react';
 import type { ID } from '../db/types';
-import { useAllTransactions, useBudgetMonth, useLookups } from '../db/hooks';
+import { useAllTransactions, useLookups } from '../db/hooks';
 import { formatCents } from '../lib/money';
-import { formatRange, monthKey, monthLabel, monthShort, shiftMonth, today } from '../lib/dates';
+import { formatRange, monthKey, monthLabel, monthShort, today } from '../lib/dates';
 import {
   buildReport, monthlySummaries, monthsEnding, periodLabels, periodRange, spendingByMonth, type Period,
 } from '../lib/reports';
 import { BarList, ColumnChart, type BarRow } from '../components/charts';
-import BudgetBar from '../components/BudgetBar';
-import { ChevronLeftIcon, ChevronRightIcon } from '../components/icons';
+import BudgetReportsSwitch from '../components/BudgetReportsSwitch';
+import { categoryIcon } from '../lib/icons';
+import { ChevronLeftIcon } from '../components/icons';
 import { Loading } from '../components/ui';
 
-type Tab = 'overview' | 'budget' | 'trends';
+// Budget vs actual lives on the Budget screen itself (same tab, switch at the top).
+type Tab = 'overview' | 'trends';
 
 // Remember choices while switching between tabs/screens.
 const memory = {
   tab: 'overview' as Tab,
   period: 'month' as Period,
   custom: [today(), today()] as [string, string],
-  budgetMonth: monthKey(),
   trendCat: 'all' as ID | 'all',
   trendMonths: 6,
 };
@@ -29,16 +30,15 @@ export default function Reports() {
 
   return (
     <>
-      <h1>Reports</h1>
-      <div className="segmented" style={{ marginBottom: 16 }}>
-        {(['overview', 'budget', 'trends'] as Tab[]).map((t) => (
+      <BudgetReportsSwitch current="reports" />
+      <div className="segmented subtle" style={{ marginBottom: 16 }}>
+        {(['overview', 'trends'] as Tab[]).map((t) => (
           <button key={t} className={tab === t ? 'seg active' : 'seg'} onClick={() => setTab(t)}>
             {t[0].toUpperCase() + t.slice(1)}
           </button>
         ))}
       </div>
       {tab === 'overview' && <Overview />}
-      {tab === 'budget' && <BudgetVsActual />}
       {tab === 'trends' && <Trends />}
     </>
   );
@@ -64,7 +64,8 @@ function Overview() {
 
   const name = (id: ID) => lookups.categories.get(id)?.name ?? '?';
   const sortRows = (m: Map<ID, number>, label: (id: ID) => string): BarRow[] =>
-    [...m.entries()].filter(([, v]) => v > 0).map(([id, value]) => ({ id, label: label(id), value }))
+    [...m.entries()].filter(([, v]) => v > 0)
+      .map(([id, value]) => ({ id, label: label(id), value, icon: categoryIcon(lookups.categories.get(id), lookups.categories) }))
       .sort((a, b) => b.value - a.value);
 
   const mainRows = sortRows(report.spendByMain, name);
@@ -128,60 +129,6 @@ function Overview() {
       <p className="muted small">
         Spending includes transfer fees and loan write-offs. Transfers, savings and lending are never counted as spending or income.
       </p>
-    </>
-  );
-}
-
-// ---------------------------------------------------------------- Budget vs actual
-
-function BudgetVsActual() {
-  const [month, setMonthState] = useState(memory.budgetMonth);
-  const setMonth = (m: string) => { memory.budgetMonth = m; setMonthState(m); };
-  const data = useBudgetMonth(month);
-
-  const nav = (
-    <div className="month-nav">
-      <button className="icon-btn" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Previous month"><ChevronLeftIcon /></button>
-      <h2 style={{ margin: 0, color: 'var(--text)' }}>{monthLabel(month)}</h2>
-      <button className="icon-btn" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Next month"><ChevronRightIcon /></button>
-    </div>
-  );
-  if (!data) return <>{nav}<Loading /></>;
-
-  const budgeted = data.mains.filter((c) => data.limits.has(c.id));
-  const others = data.mains.filter((c) => !data.limits.has(c.id) && (data.spent.get(c.id) ?? 0) > 0);
-  let limit = 0, spent = 0;
-  for (const c of budgeted) { limit += data.limits.get(c.id)!; spent += data.spent.get(c.id) ?? 0; }
-
-  return (
-    <>
-      {nav}
-      {budgeted.length === 0 ? (
-        <p className="muted">No budget limits for {monthLabel(month)}. Set them on the Budget tab.</p>
-      ) : (
-        <>
-          <section className="card"><BudgetBar name="All budgeted" spent={spent} limit={limit} /></section>
-          <section className="card stack">
-            {budgeted.map((c) => (
-              <BudgetBar key={c.id} name={c.name} spent={data.spent.get(c.id) ?? 0} limit={data.limits.get(c.id)!} />
-            ))}
-          </section>
-        </>
-      )}
-      {others.length > 0 && (
-        <>
-          <h2>Spending without a limit</h2>
-          <ul className="list card flush">
-            {others.map((c) => (
-              <li key={c.id} className="row">
-                <div className="row-main"><div className="row-title">{c.name}</div></div>
-                <span className="row-amount">{formatCents(data.spent.get(c.id) ?? 0)}</span>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      <p className="muted small">All spending this month: <b>{formatCents(data.totalSpent)}</b></p>
     </>
   );
 }

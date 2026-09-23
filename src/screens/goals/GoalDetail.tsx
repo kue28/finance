@@ -9,6 +9,7 @@ import GoalProgress from '../../components/GoalProgress';
 import TxRow from '../../components/TxRow';
 import { showToast } from '../../components/Toast';
 import { Loading, PageHeader } from '../../components/ui';
+import { haptic } from '../../lib/haptics';
 
 /** Route: /more/goals/:id */
 export default function GoalDetail({ params }: { params: { id: string } }) {
@@ -104,6 +105,7 @@ function MoveSheet({ goal, saved, direction, accounts, onClose }: {
     try {
       if (direction === 'in') await contribute(goal.id, otherId, { amount: cents, date, note });
       else await withdraw(goal.id, otherId, { amount: cents, date, note });
+      haptic();
       showToast(`${direction === 'in' ? 'Saved' : 'Withdrew'} ${formatCents(cents)}`);
       onClose();
     } catch (e) {

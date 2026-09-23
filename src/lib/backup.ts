@@ -1,6 +1,7 @@
 import { db, getSetting, setSetting } from '../db/db';
 import type { Account, Budget, Category, Goal, Loan, Recurring, Setting, Transaction } from '../db/types';
 import { today } from './dates';
+import { defaultIconFor } from './icons';
 
 // ============================================================================
 // BACKUP & RESTORE
@@ -139,7 +140,9 @@ export async function restoreBackup(backup: Backup) {
   await db.transaction('rw', tables, async () => {
     await Promise.all(tables.map((t) => t.clear()));
     await db.accounts.bulkAdd(data.accounts);
-    await db.categories.bulkAdd(data.categories);
+    // Backups made before icons existed get the default icons, like an upgraded phone.
+    await db.categories.bulkAdd(data.categories.map((c) =>
+      c.icon ? c : { ...c, ...(defaultIconFor(c.name, c.kind, c.parentId === null) ? { icon: defaultIconFor(c.name, c.kind, c.parentId === null) } : {}) }));
     await db.transactions.bulkAdd(data.transactions);
     await db.settings.bulkAdd(data.settings);
     await db.budgets.bulkAdd(data.budgets);

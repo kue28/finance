@@ -8,6 +8,7 @@ import { formatDay, today } from '../../lib/dates';
 import { describeTx, TxAmount } from '../../components/TxRow';
 import { showToast } from '../../components/Toast';
 import { Loading, PageHeader } from '../../components/ui';
+import { haptic } from '../../lib/haptics';
 
 /** Route: /more/loans/:id */
 export default function LoanDetail({ params }: { params: { id: string } }) {
@@ -117,6 +118,7 @@ function EntrySheet({ loan, outstanding, mode, accounts, onClose }: {
     try {
       if (mode === 'repay') await addRepayment(loan.id, { amount: cents, accountId, date, note });
       else await writeOff(loan.id, { amount: cents, date, note });
+      haptic();
       showToast(mode === 'repay' ? `Repayment of ${formatCents(cents)} recorded` : `Wrote off ${formatCents(cents)}`);
       onClose();
     } catch (e) {

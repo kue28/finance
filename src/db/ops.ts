@@ -51,7 +51,7 @@ export async function addCategory(name: string, kind: CategoryKind, parentId: ID
   return id;
 }
 
-export function updateCategory(id: ID, changes: Partial<Pick<Category, 'name' | 'archived'>>) {
+export function updateCategory(id: ID, changes: Partial<Pick<Category, 'name' | 'archived' | 'icon'>>) {
   if (changes.name !== undefined) changes.name = changes.name.trim();
   return db.categories.update(id, { ...changes, updatedAt: now() });
 }

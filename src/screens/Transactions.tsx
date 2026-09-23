@@ -83,7 +83,7 @@ export default function Transactions() {
     return txs.filter((t) => matches(t, f, lookups, range));
   }, [txs, lookups, f]);
 
-  if (!txs || !lookups) return <><h1>Transactions</h1><Loading /></>;
+  if (!txs || !lookups) return <><h1>Activity</h1><Loading /></>;
 
   const activeFilterCount = [f.kind !== 'all', f.accountId !== 'all', f.categoryId !== 'all', f.period !== 'all']
     .filter(Boolean).length;
@@ -111,7 +111,7 @@ export default function Transactions() {
 
   return (
     <>
-      <h1>Transactions</h1>
+      <h1>Activity</h1>
 
       <div className="search-row">
         <input type="search" value={f.search} onChange={(e) => set({ search: e.target.value })}
@@ -120,6 +120,15 @@ export default function Transactions() {
           Filter{activeFilterCount ? ` (${activeFilterCount})` : ''}
         </button>
       </div>
+
+      {/* Opened from an account on Home: make the account filter visible and easy to clear. */}
+      {f.accountId !== 'all' && !showFilters && (
+        <div className="chips" style={{ marginBottom: 12 }}>
+          <button className="chip active" onClick={() => set({ accountId: 'all' })} aria-label="Show all accounts">
+            {lookups.accounts.get(f.accountId)?.name ?? 'Account'} ✕
+          </button>
+        </div>
+      )}
 
       {showFilters && (
         <section className="card form filters">

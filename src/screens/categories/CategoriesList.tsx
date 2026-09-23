@@ -6,6 +6,8 @@ import { addCategory, move } from '../../db/ops';
 import { nameTaken } from '../../lib/labels';
 import { Loading, PageHeader, ReorderButtons } from '../../components/ui';
 import AddInline from '../../components/AddInline';
+import IconBadge from '../../components/IconBadge';
+import { categoryIcon } from '../../lib/icons';
 
 // Remember which tab was open when coming back from editing a category.
 let lastKind: CategoryKind = 'expense';
@@ -38,6 +40,7 @@ export default function CategoriesList() {
           <ul className="list card flush">
             {active.map((c, i) => (
               <li key={c.id} className="row">
+                <IconBadge icon={categoryIcon(c, new Map())} size={36} tone={kind === 'income' ? 'income' : 'neutral'} />
                 <Link href={`/more/categories/${c.id}`} className="row-main">
                   <div className="row-title">{c.name}</div>
                   {kind === 'expense' && <div className="muted small clamp">{subSummary(c)}</div>}

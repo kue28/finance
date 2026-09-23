@@ -14,6 +14,8 @@ import Keypad from '../components/Keypad';
 import CategoryPicker from '../components/CategoryPicker';
 import { showToast } from '../components/Toast';
 import { Loading, PageHeader } from '../components/ui';
+import { categoryIcon } from '../lib/icons';
+import { haptic } from '../lib/haptics';
 
 type Kind = 'expense' | 'income' | 'transfer' | 'lend';
 
@@ -147,6 +149,7 @@ function Editor({ existing, existingFee, accounts, defaultId, categories, freque
         await saveSimple({ kind, date, amount: cents, accountId, categoryId, note }, existing?.id);
         showToast(`Saved ${formatCents(cents)} · ${categories.get(categoryId)?.name ?? ''}`);
       }
+      haptic();
       goBack();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save.');
@@ -215,21 +218,27 @@ function Editor({ existing, existingFee, accounts, defaultId, categories, freque
 
       {kind === 'expense' && (
         <div className="chips">
-          {expenseChips.map((id) => (
-            <button key={id} className={id === categoryId ? 'chip active' : 'chip'} onClick={() => setCategoryId(id)}>
-              {subLabel(id)}
-            </button>
-          ))}
+          {expenseChips.map((id) => {
+            const Icon = categoryIcon(categories.get(id), categories);
+            return (
+              <button key={id} className={id === categoryId ? 'chip active' : 'chip'} onClick={() => setCategoryId(id)}>
+                <Icon size={16} strokeWidth={2} aria-hidden="true" />{subLabel(id)}
+              </button>
+            );
+          })}
           <button className="chip more" onClick={() => setPickerOpen(true)}>All categories…</button>
         </div>
       )}
       {kind === 'income' && (
         <div className="chips">
-          {incomeChips.map((c) => (
-            <button key={c.id} className={c.id === categoryId ? 'chip active' : 'chip'} onClick={() => setCategoryId(c.id)}>
-              {c.name}
-            </button>
-          ))}
+          {incomeChips.map((c) => {
+            const Icon = categoryIcon(c, categories);
+            return (
+              <button key={c.id} className={c.id === categoryId ? 'chip active' : 'chip'} onClick={() => setCategoryId(c.id)}>
+                <Icon size={16} strokeWidth={2} aria-hidden="true" />{c.name}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -262,10 +271,13 @@ function Editor({ existing, existingFee, accounts, defaultId, categories, freque
 
       {error && <p className="error">{error}</p>}
 
-      <Keypad onKey={onKey} />
-      <button className={`btn block save-btn ${kind}`} onClick={save} disabled={busy}>
-        {existing ? 'Save changes' : `Save ${kind}`}
-      </button>
+      {/* Keypad and Save stay pinned to the bottom, so Save is always on screen. */}
+      <div className="tx-bottom">
+        <Keypad onKey={onKey} />
+        <button className={`btn block save-btn ${kind}`} onClick={save} disabled={busy}>
+          {existing ? 'Save changes' : `Save ${kind}`}
+        </button>
+      </div>
       {existing && <button className="btn block ghost danger" onClick={remove}>Delete</button>}
 
       {pickerOpen && (

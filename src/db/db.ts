@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { Account, Budget, Category, Goal, Loan, Recurring, Setting, Transaction } from './types';
 import { seed } from './seed';
+import { defaultIconFor } from '../lib/icons';
 
 // IndexedDB database. Tables for budgets, recurring items, goals and loans are
 // added in later phases by bumping the version number (Dexie migrates in place,
@@ -40,6 +41,14 @@ export class FinanceDB extends Dexie {
     this.version(5).stores({
       loans: 'id, person',
     });
+    // v6 (icons): give existing categories their default icon, matched by name.
+    // Nothing else changes; categories the user created keep no icon until they pick one.
+    this.version(6).stores({}).upgrade((tx) =>
+      tx.table('categories').toCollection().modify((c: Category) => {
+        if (c.icon) return;
+        const icon = defaultIconFor(c.name, c.kind, c.parentId === null);
+        if (icon) c.icon = icon;
+      }));
     // Runs once, only when the database is first created on this device.
     this.on('populate', (tx) => seed(tx));
   }

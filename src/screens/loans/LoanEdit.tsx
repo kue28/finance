@@ -9,6 +9,7 @@ import { centsToInput, formatCents, parseToCents } from '../../lib/money';
 import { today } from '../../lib/dates';
 import { showToast } from '../../components/Toast';
 import { Loading, PageHeader } from '../../components/ui';
+import { haptic } from '../../lib/haptics';
 
 /** Routes: /more/loans/new and /more/loans/:id/edit */
 export default function LoanEdit({ params }: { params: { id?: string } }) {
@@ -58,6 +59,7 @@ function Form({ loan, accounts, defaultId, people, back }: {
         navigate(back);
       } else {
         const id = await createLoan(input);
+        haptic();
         showToast(`Lent ${formatCents(cents)} to ${person.trim()}`);
         navigate(`/more/loans/${id}`);
       }

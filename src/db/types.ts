@@ -38,6 +38,8 @@ export interface Category extends Timestamps {
   archived: boolean;
   sortOrder: number;
   systemKey?: SystemKey;
+  /** Icon key from lib/icons.tsx. Subcategories without one use their main category's icon. */
+  icon?: string;
 }
 
 export type TransactionKind = 'income' | 'expense' | 'transfer' | 'lend' | 'repayment' | 'writeoff';

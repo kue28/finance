@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import type { Cents } from '../db/types';
 import { formatCents } from '../lib/money';
 
@@ -10,6 +11,7 @@ export interface BarRow {
   id: string;
   label: string;
   value: Cents;
+  icon?: LucideIcon;
 }
 
 /**
@@ -28,7 +30,7 @@ export function BarList({ rows, total, onPick }: { rows: BarRow[]; total: Cents;
         const inner = (
           <>
             <div className="barlist-top">
-              <span className="barlist-label">{r.label}</span>
+              <span className="barlist-label">{r.icon && <r.icon size={16} strokeWidth={2} aria-hidden="true" />}{r.label}</span>
               <span className="barlist-value">{formatCents(r.value)} <span className="muted">{pct}%</span></span>
             </div>
             <div className="barlist-track">

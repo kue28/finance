@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'wouter';
+import { ArrowDownRight, ArrowUpRight, ChevronRight, Plus } from 'lucide-react';
 import {
   useAccounts, useAllTransactions, useBackupReminder, useBalances, useBudgetCopyOffer, useBudgetMonth, useDueRecurring,
   useGoals, useLoans, useLookups,
@@ -9,12 +10,28 @@ import { showToast } from '../components/Toast';
 import DueList from '../components/DueList';
 import GoalProgress from '../components/GoalProgress';
 import { formatCents } from '../lib/money';
-import { monthKey, monthLabel } from '../lib/dates';
+import { monthKey, monthShort } from '../lib/dates';
 import { accountTypeLabels } from '../lib/labels';
+import { accountIcons, categoryIcon } from '../lib/icons';
 import { budgetState } from '../lib/budget';
 import TxRow from '../components/TxRow';
 import BudgetBar from '../components/BudgetBar';
 import { Loading } from '../components/ui';
+
+function greeting(d = new Date()) {
+  const h = d.getHours();
+  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+}
+
+/** A section heading with an optional link on the right ("See all"). */
+function Section({ title, to, action = 'See all' }: { title: string; to?: string; action?: string }) {
+  return (
+    <div className="section-head">
+      <h2>{title}</h2>
+      {to && <Link href={to} className="section-link">{action}<ChevronRight size={16} /></Link>}
+    </div>
+  );
+}
 
 export default function Home() {
   const month = monthKey();
@@ -31,7 +48,7 @@ export default function Home() {
   const [, navigate] = useLocation();
 
   if (!accounts || !balances || !txs || !lookups || !budget || copyOffer === undefined || !due || !goals || !loans || !reminder) {
-    return <><h1>Home</h1><Loading /></>;
+    return <Loading />;
   }
 
   // Net worth is the sum of ALL accounts, including archived ones, so money
@@ -40,6 +57,7 @@ export default function Home() {
   for (const v of balances.values()) netWorth += v;
 
   const active = accounts.filter((a) => !a.archived);
+  const monthName = monthShort(month); // 'Sep': keeps the hero labels on one line
 
   // Budgets at 80% or more of their limit, worst first.
   const attention = budget.mains
@@ -54,9 +72,14 @@ export default function Home() {
   const owed = openLoans.reduce((s, l) => s + l.outstanding, 0);
   const overdueLoans = openLoans.filter((l) => l.overdue).length;
 
+  const openAccount = (id: string) => { presetTransactionFilters({ accountId: id }); navigate('/transactions'); };
+
   return (
     <>
-      <h1>Home</h1>
+      <header className="home-head">
+        <div className="muted small">{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+        <h1>{greeting()}</h1>
+      </header>
 
       {reminder.days !== null && (
         <section className="card notice-card">
@@ -72,27 +95,52 @@ export default function Home() {
         </section>
       )}
 
-      <section className="card">
-        <div className="muted small">Net worth</div>
-        <div className={netWorth < 0 ? 'big-amount expense' : 'big-amount'}>{formatCents(netWorth)}</div>
+      <section className="hero">
+        <div className="hero-label">Net worth</div>
+        <div className="hero-amount">{formatCents(netWorth)}</div>
+        <div className="hero-stats">
+          <Link href="/budget" className="hero-stat">
+            <span className="hero-stat-icon"><ArrowDownRight size={16} /></span>
+            <span>
+              <span className="hero-stat-label">Spent in {monthName}</span>
+              <span className="hero-stat-value">{formatCents(budget.totalSpent)}</span>
+            </span>
+          </Link>
+          <Link href="/reports" className="hero-stat">
+            <span className="hero-stat-icon"><ArrowUpRight size={16} /></span>
+            <span>
+              <span className="hero-stat-label">Income in {monthName}</span>
+              <span className="hero-stat-value">{formatCents(budget.income)}</span>
+            </span>
+          </Link>
+        </div>
         {owed > 0 && (
-          <Link href="/more/loans" className="owed-line small">
+          <Link href="/more/loans" className="hero-owed">
             Owed to you: <b>{formatCents(owed)}</b>
-            {overdueLoans > 0 && <span className="warn-text"> · {overdueLoans} overdue</span>}
-            <span className="muted"> ›</span>
+            {overdueLoans > 0 && <> · {overdueLoans} overdue</>}
+            <ChevronRight size={14} />
           </Link>
         )}
       </section>
 
-      <div className="stat-row">
-        <Link href="/budget" className="card stat">
-          <div className="muted small">Spent in {monthLabel(month).split(' ')[0]}</div>
-          <div className="stat-value expense">{formatCents(budget.totalSpent)}</div>
+      {/* Accounts: swipe sideways. Tap one to see its transactions. */}
+      <Section title="Accounts" to="/more/accounts" action="Manage" />
+      <div className="account-strip" role="list">
+        {active.map((a) => {
+          const Icon = accountIcons[a.type];
+          const bal = balances.get(a.id) ?? 0;
+          return (
+            <button key={a.id} role="listitem" className="account-card" onClick={() => openAccount(a.id)}
+              aria-label={`${a.name}, ${formatCents(bal)}. Show transactions`}>
+              <span className="account-card-top"><Icon size={18} strokeWidth={1.9} /><span className="clamp">{a.name}</span></span>
+              <span className={bal < 0 ? 'account-card-bal expense' : 'account-card-bal'}>{formatCents(bal)}</span>
+              <span className="muted small">{accountTypeLabels[a.type]}</span>
+            </button>
+          );
+        })}
+        <Link href="/more/accounts/new" className="account-card add" aria-label="Add account">
+          <Plus size={22} /><span className="small">Add account</span>
         </Link>
-        <div className="card stat">
-          <div className="muted small">Income in {monthLabel(month).split(' ')[0]}</div>
-          <div className="stat-value income">{formatCents(budget.income)}</div>
-        </div>
       </div>
 
       <DueList due={due} accounts={lookups.accounts} categories={lookups.categories} />
@@ -105,9 +153,11 @@ export default function Home() {
 
       {attention.length > 0 && (
         <>
-          <h2>Budgets needing attention</h2>
+          <Section title="Budgets needing attention" to="/budget" />
           <Link href="/budget" className="card link-card stack">
-            {attention.map((b) => <BudgetBar key={b.c.id} name={b.c.name} spent={b.spent} limit={b.limit} />)}
+            {attention.map((b) => (
+              <BudgetBar key={b.c.id} name={b.c.name} icon={categoryIcon(b.c, lookups.categories)} spent={b.spent} limit={b.limit} />
+            ))}
           </Link>
         </>
       )}
@@ -120,7 +170,7 @@ export default function Home() {
 
       {activeGoals.length > 0 && (
         <>
-          <h2>Savings goals</h2>
+          <Section title="Savings goals" to="/more/goals" />
           <Link href="/more/goals" className="card link-card stack">
             {activeGoals.slice(0, 3).map((g) => <GoalProgress key={g.id} goal={g} saved={g.saved} compact />)}
             {activeGoals.length > 3 && <span className="muted small">+{activeGoals.length - 3} more</span>}
@@ -128,32 +178,13 @@ export default function Home() {
         </>
       )}
 
-      <h2>Accounts</h2>
-      <ul className="list card flush">
-        {active.map((a) => {
-          const bal = balances.get(a.id) ?? 0;
-          return (
-            <li key={a.id} className="row">
-              <button className="row-main plain" onClick={() => { presetTransactionFilters({ accountId: a.id }); navigate('/transactions'); }}>
-                <div className="row-title">{a.name}</div>
-                <div className="muted small">{accountTypeLabels[a.type]}</div>
-              </button>
-              <div className={bal < 0 ? 'row-amount expense' : 'row-amount'}>{formatCents(bal)}</div>
-            </li>
-          );
-        })}
-      </ul>
-
-      <h2>Recent transactions</h2>
+      <Section title="Recent activity" to={txs.length > 0 ? '/transactions' : undefined} />
       {txs.length === 0 ? (
-        <p className="muted">Nothing yet. Tap + to log your first spend.</p>
+        <p className="muted">Nothing yet. Tap + below to log your first spend.</p>
       ) : (
-        <>
-          <ul className="list card flush">
-            {txs.slice(0, 5).map((t) => <TxRow key={t.id} tx={t} lookups={lookups} />)}
-          </ul>
-          <Link href="/transactions" className="link-btn">See all transactions</Link>
-        </>
+        <ul className="list card flush">
+          {txs.slice(0, 5).map((t) => <TxRow key={t.id} tx={t} lookups={lookups} />)}
+        </ul>
       )}
     </>
   );
