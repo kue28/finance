@@ -99,6 +99,22 @@ export interface Recurring extends Timestamps {
   active: boolean;
 }
 
+/**
+ * A savings goal. Money for it sits in a linked account (a savings account or
+ * cash envelope). Contributions are transfers INTO that account tagged with
+ * goalId; withdrawals are transfers OUT of it tagged with goalId. So saving is
+ * never spending. Several goals may share one account.
+ */
+export interface Goal extends Timestamps {
+  id: ID;
+  name: string;
+  target: Cents;
+  deadline?: DateStr;
+  accountId: ID;
+  completed: boolean;
+  sortOrder: number;
+}
+
 export interface Setting {
   key: string;
   value: unknown;

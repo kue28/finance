@@ -7,15 +7,15 @@ export const BACKUP_FORMAT = 'finance-backup';
 export const BACKUP_VERSION = 1;
 
 export async function buildBackup() {
-  const [accounts, categories, transactions, settings, budgets, recurring] = await Promise.all([
+  const [accounts, categories, transactions, settings, budgets, recurring, goals] = await Promise.all([
     db.accounts.toArray(), db.categories.toArray(), db.transactions.toArray(), db.settings.toArray(),
-    db.budgets.toArray(), db.recurring.toArray(),
+    db.budgets.toArray(), db.recurring.toArray(), db.goals.toArray(),
   ]);
   return {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
-    data: { accounts, categories, transactions, settings, budgets, recurring },
+    data: { accounts, categories, transactions, settings, budgets, recurring, goals },
   };
 }
 

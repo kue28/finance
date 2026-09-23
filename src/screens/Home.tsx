@@ -1,8 +1,9 @@
 import { Link } from 'wouter';
 import {
-  useAccounts, useAllTransactions, useBalances, useBudgetCopyOffer, useBudgetMonth, useDueRecurring, useLookups,
+  useAccounts, useAllTransactions, useBalances, useBudgetCopyOffer, useBudgetMonth, useDueRecurring, useGoals, useLookups,
 } from '../db/hooks';
 import DueList from '../components/DueList';
+import GoalProgress from '../components/GoalProgress';
 import { formatCents } from '../lib/money';
 import { monthKey, monthLabel } from '../lib/dates';
 import { accountTypeLabels } from '../lib/labels';
@@ -20,8 +21,9 @@ export default function Home() {
   const budget = useBudgetMonth(month);
   const copyOffer = useBudgetCopyOffer(month);
   const due = useDueRecurring();
+  const goals = useGoals();
 
-  if (!accounts || !balances || !txs || !lookups || !budget || copyOffer === undefined || !due) {
+  if (!accounts || !balances || !txs || !lookups || !budget || copyOffer === undefined || !due || !goals) {
     return <><h1>Home</h1><Loading /></>;
   }
 
@@ -39,6 +41,7 @@ export default function Home() {
     .filter((b) => budgetState(b.spent, b.limit) !== 'ok')
     .sort((a, b) => b.spent / b.limit - a.spent / a.limit);
   const hasBudgets = budget.limits.size > 0;
+  const activeGoals = goals.filter((g) => !g.completed);
 
   return (
     <>
@@ -81,6 +84,16 @@ export default function Home() {
       )}
       {!hasBudgets && !copyOffer && (
         <Link href="/budget" className="link-btn">Set monthly budget limits →</Link>
+      )}
+
+      {activeGoals.length > 0 && (
+        <>
+          <h2>Savings goals</h2>
+          <Link href="/more/goals" className="card link-card stack">
+            {activeGoals.slice(0, 3).map((g) => <GoalProgress key={g.id} goal={g} saved={g.saved} compact />)}
+            {activeGoals.length > 3 && <span className="muted small">+{activeGoals.length - 3} more</span>}
+          </Link>
+        </>
       )}
 
       <h2>Accounts</h2>

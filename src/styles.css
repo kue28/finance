@@ -494,3 +494,7 @@ input[type='date'], input[type='search'] {
   text-align: left;
   cursor: pointer;
 }
+
+/* ---------- Goals ---------- */
+.budget-bar.goal .bar-fill { background: var(--income); }
+.budget-bar.goal.done .budget-bottom span:first-child { color: var(--income); font-weight: 600; }

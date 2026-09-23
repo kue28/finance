@@ -30,6 +30,8 @@ export interface TransferInput extends Common {
   toAccountId: ID;
   fee: Cents; // 0 = no fee
   feeKey: FeeKey;
+  /** Set when this transfer is a savings goal contribution or withdrawal. */
+  goalId?: ID;
 }
 
 const clean = (note?: string) => note?.trim() || undefined;
@@ -61,6 +63,8 @@ export async function saveTransfer(input: TransferInput, id?: ID): Promise<ID> {
     const transfer = {
       kind: 'transfer' as const, date: input.date, amount: input.amount,
       accountId: input.accountId, toAccountId: input.toAccountId, note, updatedAt: t,
+      // Only set goalId when given, so editing a goal transfer in the normal editor keeps its tag.
+      ...(input.goalId ? { goalId: input.goalId } : {}),
     };
     if (id) await db.transactions.update(id, transfer);
     else await db.transactions.add({ id: transferId, createdAt: t, ...transfer });

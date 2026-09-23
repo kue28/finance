@@ -1,10 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getSetting } from './db';
-import type { CategoryKind, ID } from './types';
+import type { CategoryKind, Goal, ID } from './types';
 import { computeBalances, isIncome } from '../lib/rules';
 import { addDays, monthBounds, shiftMonth, today } from '../lib/dates';
 import { spentByMainCategory } from '../lib/budget';
 import { dueOccurrences } from '../lib/recurring';
+import { goalSaved } from '../lib/goals';
 
 // Live queries: components using these re-render automatically whenever the
 // underlying data changes. They return undefined while the first load runs.
@@ -55,10 +56,13 @@ export function useSubcategories(parentId: ID | undefined) {
 /** Lookup maps for showing names of accounts and categories in lists. */
 export function useLookups() {
   return useLiveQuery(async () => {
-    const [accounts, categories] = await Promise.all([db.accounts.toArray(), db.categories.toArray()]);
+    const [accounts, categories, goals] = await Promise.all([
+      db.accounts.toArray(), db.categories.toArray(), db.goals.toArray(),
+    ]);
     return {
       accounts: new Map(accounts.map((a) => [a.id, a])),
       categories: new Map(categories.map((c) => [c.id, c])),
+      goals: new Map(goals.map((g) => [g.id, g])),
     };
   }, []);
 }
@@ -173,4 +177,27 @@ export function useDueRecurring() {
       .flatMap((rec) => dueOccurrences(rec, t).map((date) => ({ rec, date })))
       .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
   }, []);
+}
+
+export interface GoalWithSaved extends Goal { saved: number }
+
+/** All goals with their saved amounts, in the user's order. */
+export function useGoals() {
+  return useLiveQuery(async () => {
+    const goals = await db.goals.orderBy('sortOrder').toArray();
+    const txs = goals.length ? await db.transactions.where('goalId').anyOf(goals.map((g) => g.id)).toArray() : [];
+    return goals.map((g): GoalWithSaved => ({ ...g, saved: goalSaved(g, txs) }));
+  }, []);
+}
+
+/** One goal with its saved amount and its contributions/withdrawals (newest first). */
+export function useGoal(id: ID | undefined) {
+  return useLiveQuery(async () => {
+    if (!id) return undefined;
+    const goal = await db.goals.get(id);
+    if (!goal) return null;
+    const txs = (await db.transactions.where('goalId').equals(id).toArray())
+      .sort((a, b) => (a.date === b.date ? b.createdAt - a.createdAt : a.date < b.date ? 1 : -1));
+    return { goal, saved: goalSaved(goal, txs), txs };
+  }, [id]);
 }

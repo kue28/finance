@@ -14,6 +14,7 @@ const themeOptions: { value: ThemePref; label: string }[] = [
 ];
 
 const links = [
+  { to: '/more/goals', label: 'Savings goals', hint: 'Targets, deadlines, contributions' },
   { to: '/more/accounts', label: 'Accounts', hint: 'Add, rename, archive, reorder, default account' },
   { to: '/more/categories', label: 'Categories', hint: 'Expense and income categories' },
   { to: '/more/recurring', label: 'Recurring', hint: 'Rent, salary, subscriptions and other repeats' },
@@ -74,7 +75,7 @@ export default function More() {
           ))}
         </div>
       </section>
-      <p className="muted small">Savings goals, loans and restore will live here in later phases.</p>
+      <p className="muted small">Loans and restore will live here in later phases.</p>
       <p className="muted small">Version {__APP_VERSION__}</p>
     </>
   );
